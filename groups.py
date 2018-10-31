@@ -16,7 +16,6 @@ def write_file(result):
 
 
 def find_unique_groups():
-    # input_token = input('Введите токен: ')
     input_id = input('Введите ID пользователя: ')
     vk_user = VKUser(input_id)
 
