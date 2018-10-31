@@ -1,6 +1,6 @@
 from vkclass import VKUser
 import json
-import time
+
 
 def create_group_data(group):
     return {
@@ -15,42 +15,64 @@ def write_file(result):
         f.write(json.dumps(result, ensure_ascii=False))
 
 
-def core():
+def find_unique_groups():
+    input_token = input('Введите токен: ')
     input_id = input('Введите ID пользователя: ')
-    vk_user = VKUser(input_id)
-    vk_user_friends = vk_user.get_friends()
-    friends_list = vk_user_friends['response']['items']
+    vk_user = VKUser(input_id, input_token)
 
-    vk_user_groups = vk_user.get_groups()
+    vk_user_groups = vk_user.get_groups(input_token)
     groups_list = set(vk_user_groups['response']['items'])
-    time.sleep(0.4)
 
-    friends_groups = set()
+    if len(groups_list) > 0:
 
-    for item, friend_id in enumerate(friends_list):
-        progress = round(item / len(friends_list) * 100, 2)
-        print(f'Обработка данных: {progress}')
+        vk_user_friends = vk_user.get_friends(input_token)
+        friends_list = vk_user_friends['response']['items']
 
-        response = VKUser(friend_id).get_groups()
+        if len(friends_list) > 0:
+            friends_groups = set()
 
-        try:
-            friends_groups = set(response['response']['items'])
-            friends_groups.update(friends_groups)
-        except:
-            'do nothing'
-    time.sleep(0.4)
-    common_groups = groups_list & friends_groups
-    unique_groups = groups_list - common_groups
-    result = list()
+            for item, friend_id in enumerate(friends_list):
+                response = VKUser(friend_id, input_token).get_groups(input_token)
 
-    unique_groups_data = vk_user.get_groups_data(unique_groups)['response']
+                try:
+                    friend_groups = response['response']['items']
+                    friends_groups.update(friend_groups)
+                    print(f'Обработано профилей друзей: {item + 1}, осталось: {len(friends_list) - item - 1}')
+                except KeyError:
+                    code = response['error']['error_msg']
+                    if 'Access denied: this profile is private' in code:
+                        print('Пользователь скрыл информацию')
+                    elif 'User was deleted or banned' in code:
+                        print('Пользователь удалён')
+                    else:
+                        print('Не удалось получить информацию о пользователе')
 
-    for group in unique_groups_data:
-        created_group_data = create_group_data(group)
-        result.append(created_group_data)
+            common_groups = groups_list & friends_groups
+            unique_groups = groups_list - common_groups
 
-    write_file(result)
+            result = list()
+
+            unique_groups_data = vk_user.get_groups_data(unique_groups, input_token)['response']
+
+            for group in unique_groups_data:
+                try:
+                    created_group_data = create_group_data(group)
+                    result.append(created_group_data)
+                except KeyError:
+                    group_conflict = group['id']
+                    print(f'Не удалось получить информацию о группе с ID {group_conflict} (группа удалена).')
+            print(f'Всего уникальных групп: {len(result)}\nИнформация записана в файл groups.json.')
+
+            write_file(result)
+
+        else:
+            print('У пользователя нет друзей')
+            pass
+
+    else:
+        print('Пользователь не состоит в группах')
+        pass
 
 
 if __name__ == '__main__':
-    core()
+    find_unique_groups()
