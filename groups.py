@@ -39,10 +39,10 @@ def find_unique_groups():
                     print(f'Обработано профилей друзей: {item + 1}, осталось: {len(friends_list) - item - 1}')
 
                 except KeyError:
-                    code = response['error']['error_msg']
-                    if 'Access denied: this profile is private' in code:
+                    code = response['error']['error_code']
+                    if code == 15:
                         print('Пользователь скрыл информацию')
-                    elif 'User was deleted or banned' in code:
+                    elif code == 18:
                         print('Пользователь удалён')
                     else:
                         print('Не удалось получить информацию о пользователе')
