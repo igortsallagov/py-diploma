@@ -16,28 +16,29 @@ def write_file(result):
 
 
 def find_unique_groups():
-    input_token = input('Введите токен: ')
+    # input_token = input('Введите токен: ')
     input_id = input('Введите ID пользователя: ')
-    vk_user = VKUser(input_id, input_token)
+    vk_user = VKUser(input_id)
 
-    vk_user_groups = vk_user.get_groups(input_token)
+    vk_user_groups = vk_user.get_groups()
     groups_list = set(vk_user_groups['response']['items'])
 
     if len(groups_list) > 0:
 
-        vk_user_friends = vk_user.get_friends(input_token)
+        vk_user_friends = vk_user.get_friends()
         friends_list = vk_user_friends['response']['items']
 
         if len(friends_list) > 0:
             friends_groups = set()
 
             for item, friend_id in enumerate(friends_list):
-                response = VKUser(friend_id, input_token).get_groups(input_token)
+                response = VKUser(friend_id).get_groups()
 
                 try:
                     friend_groups = response['response']['items']
                     friends_groups.update(friend_groups)
                     print(f'Обработано профилей друзей: {item + 1}, осталось: {len(friends_list) - item - 1}')
+
                 except KeyError:
                     code = response['error']['error_msg']
                     if 'Access denied: this profile is private' in code:
@@ -52,7 +53,7 @@ def find_unique_groups():
 
             result = list()
 
-            unique_groups_data = vk_user.get_groups_data(unique_groups, input_token)['response']
+            unique_groups_data = vk_user.get_groups_data(unique_groups)['response']
 
             for group in unique_groups_data:
                 try:
