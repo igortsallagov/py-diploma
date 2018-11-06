@@ -4,6 +4,7 @@ API_URL = 'https://api.vk.com/method'
 VERSION = '5.85'
 TOKEN = input('Введите токен: ')
 
+
 class VKUser:
 
     def __init__(self, input_id):
